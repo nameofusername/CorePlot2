@@ -90,7 +90,7 @@
 {
 	CPTTextLayer *label = [[CPTTextLayer alloc] initWithText:[NSString stringWithFormat:@"%lu", index]];
 	CPTMutableTextStyle *textStyle = [label.textStyle mutableCopy];
-	textStyle.color = [CPTColor darkGrayColor];
+	textStyle.color = [CPTColor whiteColor];
 	label.textStyle = textStyle;
 	[textStyle release];
 	return [label autorelease];
@@ -99,7 +99,7 @@
 - (CPTFill *)sliceFillForPieChart:(CPTPieChart *)pieChart recordIndex:(NSUInteger)index
 {
 	CPTFill *sliceFill;
-	CGColorRef color = [[UIColor colorWithRed:index*0.4+1 green:index*0.2+0.1 blue:index*0.3+0.4 alpha:0.8] CGColor];
+	CGColorRef color = [[UIColor colorWithRed:index*0.1+0.3 green:index*0.2+0.1 blue:index*0.4+0.4 alpha:0.8] CGColor];
 	sliceFill = [CPTFill fillWithColor:[CPTColor colorWithCGColor:color]];
 	return sliceFill;
 }
