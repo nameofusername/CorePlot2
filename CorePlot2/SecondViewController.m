@@ -34,7 +34,7 @@
 	[pieChart release];
 	
 	pieChart = [[CPTXYGraph alloc] initWithFrame:CGRectZero];
-	CPTTheme *theme = [CPTTheme themeNamed:kCPTDarkGradientTheme];
+	CPTTheme *theme = [CPTTheme themeNamed:kCPTSlateTheme];
 	[pieChart applyTheme:theme];
 	
 	CPTGraphHostingView *hostingView = (CPTGraphHostingView *)self.view;
@@ -99,7 +99,7 @@
 - (CPTFill *)sliceFillForPieChart:(CPTPieChart *)pieChart recordIndex:(NSUInteger)index
 {
 	CPTFill *sliceFill;
-	CGColorRef color = [[UIColor colorWithRed:index*0.1+0.3 green:index*0.2+0.1 blue:index*0.4+0.4 alpha:0.8] CGColor];
+	CGColorRef color = [[UIColor colorWithRed:(index%9) * 0.09 + 0.7 - (index%3) * 0.4 green:(index%8) * 0.1 - (index%2) * 0.2 blue:(index%9) * 0.09 + 0.35 - (index%6) * 0.2 alpha:1 - (index%3) * 0.1] CGColor];
 	sliceFill = [CPTFill fillWithColor:[CPTColor colorWithCGColor:color]];
 	return sliceFill;
 }
@@ -147,6 +147,10 @@
 									[NSNumber numberWithDouble:10.0],
 									[NSNumber numberWithDouble:25.0],
 									[NSNumber numberWithDouble:15.0],
+									[NSNumber numberWithDouble:20.0], 
+									[NSNumber numberWithDouble:30.0], 
+									[NSNumber numberWithDouble:10.0],
+									[NSNumber numberWithDouble:25.0],
 									nil];
 	self.dataForChart = contentArray;
 	
