@@ -114,6 +114,10 @@
 	y.axisLineStyle = lineStyle;
 	y.majorTickLineStyle = nil;
 	//y.minorTickLineStyle = nil;
+	
+	lineStyle.dashPattern = [NSArray arrayWithObjects:[NSNumber numberWithFloat:1.0f], [NSNumber numberWithFloat:2.0f], nil];
+	lineStyle.lineWidth = 0.5f;
+	
 	y.majorGridLineStyle = lineStyle;
 	y.gridLinesRange = [CPTPlotRange plotRangeWithLocation:CPTDecimalFromFloat(0.0) length:CPTDecimalFromFloat(40.0)];
 	y.labelAlignment = CPTAlignmentTop;
@@ -123,6 +127,9 @@
 					   [CPTPlotRange plotRangeWithLocation:CPTDecimalFromFloat(-0.01) length:CPTDecimalFromFloat(0.02)], 
 					   nil];
 	y.labelExclusionRanges = exclusionRanges;
+	
+	lineStyle.dashPattern = nil;
+	lineStyle.lineWidth = 2.0f;
 	
 	CPTScatterPlot *boundLinePlot = [[[CPTScatterPlot alloc] init] autorelease];
 	lineStyle.miterLimit = 1.0f;
