@@ -76,8 +76,8 @@
 	graph.paddingBottom = 10.0;
 	
 	CPTXYPlotSpace *plotSpace = (CPTXYPlotSpace *)graph.defaultPlotSpace;
-	plotSpace.xRange = [CPTPlotRange plotRangeWithLocation:CPTDecimalFromFloat(0.0) length:CPTDecimalFromFloat(2.0)];
-	plotSpace.yRange = [CPTPlotRange plotRangeWithLocation:CPTDecimalFromFloat(-0.2) length:CPTDecimalFromFloat(3.0)];
+	plotSpace.xRange = [CPTPlotRange plotRangeWithLocation:CPTDecimalFromFloat(0.0) length:CPTDecimalFromFloat(40.0)];
+	plotSpace.yRange = [CPTPlotRange plotRangeWithLocation:CPTDecimalFromFloat(-2.0) length:CPTDecimalFromFloat(30.0)];
 	
 	plotSpace.allowsUserInteraction = YES;
 	
@@ -89,7 +89,7 @@
 	
 	CPTXYAxisSet *axesSet = (CPTXYAxisSet *)graph.axisSet;
 	CPTXYAxis *x = axesSet.xAxis;
-	x.majorIntervalLength = CPTDecimalFromString(@"0.2");
+	x.majorIntervalLength = CPTDecimalFromString(@"4");
 	x.orthogonalCoordinateDecimal = CPTDecimalFromString(@"0");
 	x.minorTicksPerInterval = 0;
 	x.axisLineStyle = lineStyle;
@@ -99,23 +99,23 @@
 	x.labelOffset = -6;
 	x.tickDirection = CPTSignNone;
 	x.majorGridLineStyle = lineStyle;
-	x.gridLinesRange = [CPTPlotRange plotRangeWithLocation:CPTDecimalFromFloat(0.0) length:CPTDecimalFromFloat(3.0)];
+	x.gridLinesRange = [CPTPlotRange plotRangeWithLocation:CPTDecimalFromFloat(0.0) length:CPTDecimalFromFloat(30.0)];
 	
 	NSArray *exclusionRanges = [NSArray arrayWithObjects:
 								[CPTPlotRange plotRangeWithLocation:CPTDecimalFromFloat(-0.01) length:CPTDecimalFromFloat(0.02)], 
-								[CPTPlotRange plotRangeWithLocation:CPTDecimalFromFloat(1.99) length:CPTDecimalFromFloat(0.02)], 
+								[CPTPlotRange plotRangeWithLocation:CPTDecimalFromFloat(39.99) length:CPTDecimalFromFloat(0.02)], 
 								nil];
 	x.labelExclusionRanges = exclusionRanges;
 	
 	CPTXYAxis *y = axesSet.yAxis;
-	y.majorIntervalLength = CPTDecimalFromString(@"0.3");
-	y.orthogonalCoordinateDecimal = CPTDecimalFromString(@"2");
+	y.majorIntervalLength = CPTDecimalFromString(@"3");
+	y.orthogonalCoordinateDecimal = CPTDecimalFromString(@"40");
 	y.minorTicksPerInterval = 0;
 	y.axisLineStyle = lineStyle;
 	y.majorTickLineStyle = nil;
 	//y.minorTickLineStyle = nil;
 	y.majorGridLineStyle = lineStyle;
-	y.gridLinesRange = [CPTPlotRange plotRangeWithLocation:CPTDecimalFromFloat(0.0) length:CPTDecimalFromFloat(2.0)];
+	y.gridLinesRange = [CPTPlotRange plotRangeWithLocation:CPTDecimalFromFloat(0.0) length:CPTDecimalFromFloat(40.0)];
 	y.labelAlignment = CPTAlignmentTop;
 
 	
@@ -135,11 +135,11 @@
 	[graph addPlot:boundLinePlot];
 	
 	NSMutableArray *contentArray = [NSMutableArray arrayWithCapacity:100];
-	xValues = [[NSMutableArray alloc] initWithCapacity:100];
+	xValues = [[NSMutableArray alloc] initWithCapacity:1000];
 	NSUInteger i;
-	for (i = 0; i < 35; ++i) {
-		id x = [NSNumber numberWithFloat:i * 0.05];
-		id y = [NSNumber numberWithFloat:1.2 * rand() / (float)RAND_MAX + 1.2];
+	for (i = 0; i < 190; ++i) {
+		id x = [NSNumber numberWithFloat:i*0.18];
+		id y = [NSNumber numberWithFloat:10.2 * rand() / (float)RAND_MAX + 10.2];
 		[contentArray addObject:[NSMutableDictionary dictionaryWithObjectsAndKeys:x, @"x", y, @"y", nil]];
 		[xValues addObject:x];
 	}
@@ -220,7 +220,7 @@
 			selectionAxis = [[[CPTXYAxis alloc] init] autorelease];
 			selectionAxis.coordinate = CPTCoordinateY;
 			
-			point.x -= 20;
+			point.x -= 11;
 			
 			NSDecimal pt[2];
 			[space plotPoint:pt forPlotAreaViewPoint:point];
@@ -240,8 +240,16 @@
 			selectionAxis.visibleRange = axisSet.xAxis.gridLinesRange;
 			
 			axisSet.axes = [axisSet.axes arrayByAddingObject:selectionAxis];
-			
-			[axisSet relabelAxes];
+#if 0
+			CPTMutableTextStyle *ts = [[[CPTMutableTextStyle alloc] init] autorelease];
+			ts.fontSize = 24;
+			ts.fontName = @"Arial";
+			ts.color = [CPTColor yellowColor];
+			scatterPlotWithSymbol.labelTextStyle = ts;
+			scatterPlotWithSymbol.labelFormatter = [[[NSNumberFormatter alloc] init] autorelease];
+			[scatterPlotWithSymbol.labelFormatter setNumberStyle:NSNumberFormatterDecimalStyle];
+#endif	
+			//[axisSet relabelAxes];
 			[scatterPlotWithSymbol reloadData];
 		}
 	}
@@ -252,10 +260,10 @@
 {
 #if 1
 	if (scatterPlotWithSymbol != nil) {
-		CPTXYAxisSet *axisSet = (CPTXYAxisSet *)graph.axisSet;
+		//CPTXYAxisSet *axisSet = (CPTXYAxisSet *)graph.axisSet;
 		
 		if (selectionAxis != nil) {
-			point.x -= 20;
+			point.x -= 11;
 			
 			NSDecimal pt[2];
 			[space plotPoint:pt forPlotAreaViewPoint:point];
@@ -263,7 +271,7 @@
 			selectedPointIndex = [self selectedPointIndex:pt[0]];
 			
 			selectionAxis.orthogonalCoordinateDecimal = [[xValues objectAtIndex:selectedPointIndex] decimalValue];
-			[axisSet relabelAxes];
+			//[axisSet relabelAxes];
 			[scatterPlotWithSymbol reloadData];
 		}
 	}
@@ -282,7 +290,7 @@
 			range.length = 2;
 			axisSet.axes = [axisSet.axes subarrayWithRange:range];
 			selectionAxis = nil;
-			[axisSet relabelAxes];
+			//[axisSet relabelAxes];
 			[scatterPlotWithSymbol reloadData];
 		}
 	}
@@ -300,7 +308,7 @@
 			range.length = 2;
 			axisSet.axes = [axisSet.axes subarrayWithRange:range];
 			selectionAxis = nil;
-			[axisSet relabelAxes];
+			//[axisSet relabelAxes];
 			[scatterPlotWithSymbol reloadData];
 		}
 	}
@@ -313,8 +321,8 @@
 	if (symbol == nil) {
 		symbol = [[CPTPlotSymbol ellipsePlotSymbol] retain];
 		CGSize size;
-		size.width = 15;
-		size.height = 15;
+		size.width = 10;
+		size.height = 10;
 		symbol.size = size;
 		symbol.lineStyle = nil;
 		CGColorRef color = [[UIColor colorWithRed:(16*16-9)/256.0 green:(12*16+9)/256.0 blue:(3*16+14)/256.0 alpha:1.0] CGColor];
