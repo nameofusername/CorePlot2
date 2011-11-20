@@ -9,11 +9,19 @@
 #import <UIKit/UIKit.h>
 #import "CorePlot-CocoaTouch.h"
 
-@interface FirstViewController : UIViewController <CPTPlotDataSource> {
+@interface FirstViewController : UIViewController <CPTPlotDataSource, CPTPlotSpaceDelegate, CPTScatterPlotDataSource> {
 	CPTXYGraph *graph;
 	NSMutableArray *dataForPlot;
+	NSMutableArray *xValues;
+	
+	CPTScatterPlot *scatterPlotWithSymbol;
+	CPTXYAxis *selectionAxis;
+	NSUInteger selectedPointIndex;
+	id clickerDelegate;
+	CGPoint prevTouchPoint;
 }
 
 @property(readwrite, nonatomic, retain) NSMutableArray *dataForPlot;
+@property(nonatomic, assign) id clickerDelegate;
 
 @end

@@ -10,7 +10,7 @@
 
 @implementation FirstViewController
 
-@synthesize dataForPlot;
+@synthesize dataForPlot, clickerDelegate;
 
 - (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
 {
@@ -35,17 +35,27 @@
 	return [dataForPlot count];
 }
 
-- (NSNumber *)numberForPlot:(CPTPlot *)plot field:(NSUInteger)fieldEnum recordIndex:(NSUInteger)index
+- (NSArray *)numbersForPlot:(CPTPlot *)plot field:(NSUInteger)fieldEnum recordIndexRange:(NSRange)indexRange
 {
-	NSNumber *num = [[dataForPlot objectAtIndex:index] valueForKey:(fieldEnum == CPTScatterPlotFieldX) ? @"x" : @"y"];
-	
-	if ([(NSString *)plot.identifier isEqualToString:@"Green Plot"]) {
-		if (fieldEnum == CPTScatterPlotFieldY) {
-			num = [NSNumber numberWithDouble:[num doubleValue] + 1.0];
-		}
+	NSMutableArray *nums = [NSMutableArray array];
+	for (NSUInteger i = 0; i < indexRange.length; ++i) {
+		NSNumber *num = [[dataForPlot objectAtIndex:i] valueForKey:(fieldEnum == CPTScatterPlotFieldX) ? @"x" : @"y"];
+		[nums addObject:num];
 	}
-	return num;
+	return nums;
 }
+
+//- (NSNumber *)numberForPlot:(CPTPlot *)plot field:(NSUInteger)fieldEnum recordIndex:(NSUInteger)index
+//{
+//	NSNumber *num = [[dataForPlot objectAtIndex:index] valueForKey:(fieldEnum == CPTScatterPlotFieldX) ? @"x" : @"y"];
+//	
+//	if ([(NSString *)plot.identifier isEqualToString:@"Green Plot"]) {
+//		if (fieldEnum == CPTScatterPlotFieldY) {
+//			num = [NSNumber numberWithDouble:[num doubleValue] + 1.0];
+//		}
+//	}
+//	return num;
+//}
 
 #pragma mark - View lifecycle
 
@@ -69,21 +79,27 @@
 	plotSpace.xRange = [CPTPlotRange plotRangeWithLocation:CPTDecimalFromFloat(0.0) length:CPTDecimalFromFloat(2.0)];
 	plotSpace.yRange = [CPTPlotRange plotRangeWithLocation:CPTDecimalFromFloat(-0.2) length:CPTDecimalFromFloat(3.0)];
 	
+	plotSpace.allowsUserInteraction = YES;
+	
+	plotSpace.delegate = self;
+	
 	CPTMutableLineStyle *lineStyle = [CPTMutableLineStyle lineStyle];
 	lineStyle.lineWidth = 2.0f;
 	lineStyle.lineColor = [CPTColor colorWithCGColor:[[UIColor colorWithRed:0.8 green:0.8 blue:1.0 alpha:0.5] CGColor]];
 	
 	CPTXYAxisSet *axesSet = (CPTXYAxisSet *)graph.axisSet;
 	CPTXYAxis *x = axesSet.xAxis;
-	x.majorIntervalLength = CPTDecimalFromString(@"0.5");
+	x.majorIntervalLength = CPTDecimalFromString(@"0.2");
 	x.orthogonalCoordinateDecimal = CPTDecimalFromString(@"0");
-	x.minorTicksPerInterval = 2;
+	x.minorTicksPerInterval = 0;
 	x.axisLineStyle = lineStyle;
-	x.majorTickLineStyle = lineStyle;
-	x.majorTickLength = graph.frame.size.height;
-	x.minorTickLineStyle = nil;
-	x.tickDirection = CPTSignPositive;
-	x.labelOffset = -graph.frame.size.height - 20;
+	x.majorTickLineStyle = nil; //lineStyle;
+	//x.majorTickLength = graph.frame.size.height;
+	//x.minorTickLineStyle = nil;
+	x.labelOffset = -6;
+	x.tickDirection = CPTSignNone;
+	x.majorGridLineStyle = lineStyle;
+	x.gridLinesRange = [CPTPlotRange plotRangeWithLocation:CPTDecimalFromFloat(0.0) length:CPTDecimalFromFloat(3.0)];
 	
 	NSArray *exclusionRanges = [NSArray arrayWithObjects:
 								[CPTPlotRange plotRangeWithLocation:CPTDecimalFromFloat(-0.01) length:CPTDecimalFromFloat(0.02)], 
@@ -92,12 +108,16 @@
 	x.labelExclusionRanges = exclusionRanges;
 	
 	CPTXYAxis *y = axesSet.yAxis;
-	y.majorIntervalLength = CPTDecimalFromString(@"0.5");
+	y.majorIntervalLength = CPTDecimalFromString(@"0.3");
 	y.orthogonalCoordinateDecimal = CPTDecimalFromString(@"2");
-	y.minorTicksPerInterval = 5;
+	y.minorTicksPerInterval = 0;
 	y.axisLineStyle = lineStyle;
 	y.majorTickLineStyle = nil;
-	y.minorTickLineStyle = nil;
+	//y.minorTickLineStyle = nil;
+	y.majorGridLineStyle = lineStyle;
+	y.gridLinesRange = [CPTPlotRange plotRangeWithLocation:CPTDecimalFromFloat(0.0) length:CPTDecimalFromFloat(2.0)];
+	y.labelAlignment = CPTAlignmentTop;
+
 	
 	exclusionRanges = [NSArray arrayWithObjects:
 					   [CPTPlotRange plotRangeWithLocation:CPTDecimalFromFloat(-0.01) length:CPTDecimalFromFloat(0.02)], 
@@ -110,17 +130,18 @@
 	lineStyle.lineWidth = 2.0f;
 	boundLinePlot.dataLineStyle = lineStyle;
 	boundLinePlot.identifier = @"Blue Plot";
+	scatterPlotWithSymbol = boundLinePlot;
 	boundLinePlot.dataSource = self;
 	[graph addPlot:boundLinePlot];
 	
-	
-	
 	NSMutableArray *contentArray = [NSMutableArray arrayWithCapacity:100];
+	xValues = [[NSMutableArray alloc] initWithCapacity:100];
 	NSUInteger i;
 	for (i = 0; i < 35; ++i) {
 		id x = [NSNumber numberWithFloat:i * 0.05];
 		id y = [NSNumber numberWithFloat:1.2 * rand() / (float)RAND_MAX + 1.2];
 		[contentArray addObject:[NSMutableDictionary dictionaryWithObjectsAndKeys:x, @"x", y, @"y", nil]];
+		[xValues addObject:x];
 	}
 	self.dataForPlot = contentArray;
 }
@@ -129,6 +150,7 @@
 {
 	[graph release];
 	[dataForPlot release];
+	[xValues release];
     [super viewDidUnload];
     // Release any retained subviews of the main view.
     // e.g. self.myOutlet = nil;
@@ -165,6 +187,146 @@
 	if ( UIInterfaceOrientationIsLandscape(toInterfaceOrientation) ) {
 		
 	}
+}
+
+#pragma mark - CPTPlotSapceDelegate mathods
+
+- (NSUInteger)selectedPointIndex:(NSDecimal)xCoord
+{
+#if 1
+	if (scatterPlotWithSymbol != nil) {
+		NSDecimalNumber *xCoordNum = [NSDecimalNumber decimalNumberWithDecimal:xCoord];
+		//CPTScatterPlot *plot = (CPTScatterPlot *)[graph plotWithIdentifier:scatterPlotWithSymbol.identifier];
+		for (NSUInteger i = 0; i < [xValues count]; ++i) {
+			if ([[xValues objectAtIndex:i] compare:xCoordNum] == NSOrderedDescending) {
+				return i;
+			}
+		}
+		return [dataForPlot count] - 1;
+	}
+#endif
+	return 1;
+}
+
+- (BOOL)plotSpace:(CPTPlotSpace *)space shouldHandlePointingDeviceDownEvent:(id)event atPoint:(CGPoint)point
+{
+	if (scatterPlotWithSymbol != nil) {
+		CPTXYPlotSpace *plotSpace = (CPTXYPlotSpace *)graph.defaultPlotSpace;
+		
+		prevTouchPoint = point;
+		
+		if (space == plotSpace) {
+			CPTXYAxisSet *axisSet = (CPTXYAxisSet *)graph.axisSet;
+			selectionAxis = [[[CPTXYAxis alloc] init] autorelease];
+			selectionAxis.coordinate = CPTCoordinateY;
+			
+			point.x -= 20;
+			
+			NSDecimal pt[2];
+			[space plotPoint:pt forPlotAreaViewPoint:point];
+			
+			selectedPointIndex = [self selectedPointIndex:pt[0]];
+			
+			selectionAxis.orthogonalCoordinateDecimal = [[xValues objectAtIndex:selectedPointIndex] decimalValue];			
+			CPTMutableLineStyle *ls = [axisSet.xAxis.axisLineStyle mutableCopy];
+			ls.lineWidth = 3.0;
+			
+			CGColorRef color = [[UIColor colorWithRed:(16*16-9)/256.0 green:(12*16+9)/256.0 blue:(3*16+14)/256.0 alpha:1.0] CGColor];
+			ls.lineColor = [CPTColor colorWithCGColor:color];
+			selectionAxis.axisLineStyle = ls;
+			[ls release];
+			selectionAxis.plotSpace = plotSpace;
+			selectionAxis.labelingPolicy = CPTAxisLabelingPolicyNone;
+			selectionAxis.visibleRange = axisSet.xAxis.gridLinesRange;
+			
+			axisSet.axes = [axisSet.axes arrayByAddingObject:selectionAxis];
+			
+			[axisSet relabelAxes];
+			[scatterPlotWithSymbol reloadData];
+		}
+	}
+	return NO;
+}
+
+- (BOOL)plotSpace:(CPTPlotSpace *)space shouldHandlePointingDeviceDraggedEvent:(id)event atPoint:(CGPoint)point
+{
+#if 1
+	if (scatterPlotWithSymbol != nil) {
+		CPTXYAxisSet *axisSet = (CPTXYAxisSet *)graph.axisSet;
+		
+		if (selectionAxis != nil) {
+			point.x -= 20;
+			
+			NSDecimal pt[2];
+			[space plotPoint:pt forPlotAreaViewPoint:point];
+			
+			selectedPointIndex = [self selectedPointIndex:pt[0]];
+			
+			selectionAxis.orthogonalCoordinateDecimal = [[xValues objectAtIndex:selectedPointIndex] decimalValue];
+			[axisSet relabelAxes];
+			[scatterPlotWithSymbol reloadData];
+		}
+	}
+#endif
+	return NO;
+}
+
+- (BOOL)plotSpace:(CPTPlotSpace *)space shouldHandlePointingDeviceCancelledEvent:(id)event
+{
+	if (scatterPlotWithSymbol != nil) {
+		CPTXYAxisSet *axisSet = (CPTXYAxisSet *)graph.axisSet;
+		
+		if ([axisSet.axes containsObject:selectionAxis]) {
+			NSRange range;
+			range.location = 0;
+			range.length = 2;
+			axisSet.axes = [axisSet.axes subarrayWithRange:range];
+			selectionAxis = nil;
+			[axisSet relabelAxes];
+			[scatterPlotWithSymbol reloadData];
+		}
+	}
+	return NO;
+}
+
+- (BOOL)plotSpace:(CPTPlotSpace *)space shouldHandlePointingDeviceUpEvent:(id)event atPoint:(CGPoint)point
+{
+	if (scatterPlotWithSymbol != nil) {
+		CPTXYAxisSet *axisSet = (CPTXYAxisSet *)graph.axisSet;
+		
+		if ([axisSet.axes containsObject:selectionAxis]) {
+			NSRange range;
+			range.location = 0;
+			range.length = 2;
+			axisSet.axes = [axisSet.axes subarrayWithRange:range];
+			selectionAxis = nil;
+			[axisSet relabelAxes];
+			[scatterPlotWithSymbol reloadData];
+		}
+	}
+	return NO;
+}
+
+- (CPTPlotSymbol *)symbolForScatterPlot:(CPTScatterPlot *)plot recordIndex:(NSUInteger)index
+{
+	static CPTPlotSymbol *symbol = nil;
+	if (symbol == nil) {
+		symbol = [[CPTPlotSymbol ellipsePlotSymbol] retain];
+		CGSize size;
+		size.width = 15;
+		size.height = 15;
+		symbol.size = size;
+		symbol.lineStyle = nil;
+		CGColorRef color = [[UIColor colorWithRed:(16*16-9)/256.0 green:(12*16+9)/256.0 blue:(3*16+14)/256.0 alpha:1.0] CGColor];
+		symbol.fill = [CPTFill fillWithColor:[CPTColor colorWithCGColor:color]];
+	}
+	
+	if (scatterPlotWithSymbol == plot) {
+		if (index == selectedPointIndex && selectionAxis != nil) {
+			return symbol;
+		}
+	}
+	return nil;
 }
 
 @end
